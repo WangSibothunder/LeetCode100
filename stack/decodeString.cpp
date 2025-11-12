@@ -1,77 +1,66 @@
-#include <iostream>
+#include <string>
 #include <stack>
 #include <string>
+#include <vector>
+#include <algorithm>
 using namespace std;
 class Solution
 {
-    stack<pair<int, string>> stk;
-    string ans = "";
-    string mulstring(int nums, string str)
+    string getDigits(string &s, size_t &ptr)
     {
-        string out;
-        for (int i = 0; i < nums; i++)
+        string ret = "";
+        while (isdigit(s[ptr]))
         {
-            out += str;
+            ret.push_back(s[ptr++]);
         }
-        return out;
+        return ret;
+    }
+    string getString(vector<string> &v)
+    {
+        string ret;
+        for (const auto &s : v)
+        {
+            ret += s;
+        }
+        return ret;
     }
 
 public:
     string decodeString(string s)
     {
-        int num = 0;
-        bool inb = 0;
-        string temp = "";
-        s += "[]";
-        for (char ch : s)
+        vector<string> stk;
+        size_t ptr = 0;
+        while (ptr < s.size())
         {
-            if (ch >= '0' && ch <= '9')
+            char cur = s[ptr];
+            if (isdigit(cur))
             {
-                num = num * 10 + ch - '0';
+                string digits = getDigits(s, ptr);
+                stk.push_back(digits);
             }
-            if (ch == '[')
+            else if (isalpha(cur) || cur == '[')
             {
-                stk.push(make_pair(num, temp));
-
-                num = 0;
-                temp = "";
+                stk.push_back(string(1, s[ptr++]));
             }
-            if (ch >= 'a' && ch <= 'z')
+            else
             {
-                temp += ch;
-            }
-            if (ch == ']')
-            {
-                string before_str = stk.top().second;
-                int before_nums = stk.top().first;
-                printf("temp:");
-                cout << temp << endl;
-                printf("before_nums=%d\n", before_nums);
-                before_str = before_str + mulstring(before_nums, temp);
-                printf("before_str:");
-                cout << before_str << endl;
-                stk.pop();
-                temp = "";
-                if (stk.empty())
-                    ans += before_str;
-                else
+                ptr++;
+                vector<string> substr;
+                while (stk.back() != "[")
                 {
-                    string before_before_str = stk.top().second;
-                    int nums = stk.top().first;
-                    before_before_str = before_before_str + before_str;
-                    stk.pop();
-                    stk.push(make_pair(nums, before_before_str));
+                    substr.push_back(stk.back());
+                    stk.pop_back();
                 }
+                reverse(substr.begin(), substr.end());
+                stk.pop_back();
+                int repTime = stoi(stk.back());
+                stk.pop_back();
+                string t, o = getString(substr);
+                while (repTime--)
+                    t += o;
+                stk.push_back(t);
             }
         }
-        return ans;
+        return getString(stk);
     }
 };
-int main()
-{
-    string s = "3[a2[c]]";
-    Solution a;
-    string out = a.decodeString(s);
-    cout << out;
-    return 0;
-}
