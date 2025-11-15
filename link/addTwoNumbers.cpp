@@ -11,66 +11,18 @@ struct ListNode
 class Solution
 {
 public:
-    ListNode *addTwoNumbers(ListNode *l1, ListNode *l2)
+    ListNode *addTwoNumbers(ListNode *l1, ListNode *l2,int carry = 0)
     {
-        ListNode *ans = new ListNode(0, nullptr);
-        ListNode *last = new ListNode(0, ans);
-        int sum = l1->val + l2->val;
-        int cnt = sum % 10; // 得到个位
-        int cout = sum / 10;
-        ans->val = cnt;
-        last->val = last->val + cout;
-        ListNode *next = new ListNode(0, nullptr);
-        if (cout == 0)
-            ans->next = nullptr;
-        else{
-            ans->next = last;
-        }
-        last = ans;
-        ans = next;
-        l1 = l1->next;
-        l2 = l2->next;
-        while (l1 && l2)
-        {
-            int sum = l1->val + l2->val;
-            int cnt = sum % 10; // 得到个位
-            int cout = sum / 10;
-            ans->val = cnt;
-            last->val = last->val + cout;
-            ListNode *next = new ListNode(0, nullptr);
-            ans->next = last;
-            last = ans;
-            ans = next;
-            l1 = l1->next;
-            l2 = l2->next;
-        }
-        while (l1)
-        {
-            int sum = l1->val;
-            int cnt = sum % 10; // 得到个位
-            int cout = sum / 10;
-            ans->val = cnt;
-            last->val = last->val + cout;
-            ListNode *next = new ListNode(0, nullptr);
-            ans->next = last;
-            last = ans;
-            ans = next;
+        if(l1==nullptr&&l2==nullptr&&carry==0) return nullptr;
+        int s = carry;
+        if(l1){
+            s+=l1->val;
             l1 = l1->next;
         }
-        while (l2)
-        {
-            int sum = l2->val;
-            int cnt = sum % 10; // 得到个位
-            int cout = sum / 10;
-            ans->val = cnt;
-            last->val = last->val + cout;
-            ListNode *next = new ListNode(0, nullptr);
-            ans->next = last;
-            last = ans;
-            ans = next;
+        if(l2){
+            s+=l2->val;
             l2 = l2->next;
         }
-        ans->next = last;
-        return ans;
+        return new ListNode(s%10,addTwoNumbers(l1,l2,s/10));
     }
 };
