@@ -1,5 +1,0 @@
----
-triple:          'arm64-apple-darwin'
-binary-path:     '/Users/wangsibo/program/leecode/sum_of_two_num'
-relocations:     []
-...
