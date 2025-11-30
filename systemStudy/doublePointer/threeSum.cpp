@@ -16,7 +16,7 @@ public:
                 continue;
             int j = i + 1;
             int k = size - 1;
-            while (j < k)
+            while (j < k) 
             {
                 int sum = nums[i] + nums[j] + nums[k];
                 if (sum == 0)
