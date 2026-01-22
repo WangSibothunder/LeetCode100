@@ -11,7 +11,6 @@ struct ListNode
     ListNode *random;
     ListNode() : val(0), next(nullptr), random(nullptr) {}
     ListNode(int x) : val(x), next(nullptr), random(nullptr) {}
-    ListNode(int x, ListNode *next) : val(x), next(next), random(nullptr) {}
 };
 class Node
 {
@@ -27,3 +26,11 @@ public:
         random = NULL;
     }
 };
+void printList(ListNode* head) {
+    ListNode* current = head;
+    while (current != nullptr) {
+        printf("%d -> ", current->val);
+        current = current->next;
+    }
+    printf("nullptr\n");
+}

@@ -67,5 +67,6 @@ int main()
         printf("%d ", res->val);
         res = res->next;
     }
+    printList(res);
     return 0;
 }

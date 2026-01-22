@@ -1,0 +1,11 @@
+CompileFlags:
+  Compiler: C:\gcc\mingw64\bin\g++.exe
+  Add:
+    - -std=c++17
+    - -IC:\gcc\mingw64\include
+    - -IC:\gcc\mingw64\include\c++
+    - -IC:\gcc\mingw64\include\c++\x86_64-w64-mingw32
+    - -I.
+Diagnostics:
+  ClangTidy:
+    Remove: "*"
