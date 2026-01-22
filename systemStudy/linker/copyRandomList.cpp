@@ -1,51 +1,58 @@
-#include "link.h"
-/*
+#include <iostream>
+#include <unordered_map>
+using namespace std;
+
 // Definition for a Node.
-class Node {
+class Node
+{
 public:
     int val;
-    Node* next;
-    Node* random;
+    Node *next;
+    Node *random;
 
-    Node(int _val) {
+    Node(int _val)
+    {
         val = _val;
         next = NULL;
         random = NULL;
     }
 };
-*/
+
 class Solution
 {
 public:
     Node *copyRandomList(Node *head)
     {
-        map<int, Node *> Registry_random;
+        if (head == nullptr)
+            return nullptr;
 
-        Node *ans = new Node(head->val);
-        while (ans != nullptr)
+        unordered_map<Node *, Node *> mapping;
+
+        // First pass: create all nodes
+        Node *curr = head;
+        while (curr != nullptr)
         {
-            ans->val = head->val;
-            if (head->random == nullptr)
-                ans->random = nullptr;
-            else
-            {
-                if (Registry_random.count(head->random->val) == 0)
-                {
-                    Node *newNode = new Node(head->random->val);
-                    Registry_random[head->random->val] = newNode;
-                }
-                ans->random = Registry_random[ans->random->val];
-            }
-            if (head->next != nullptr)
-            {
-                Node *newNode = new Node(head->next->val);
-                ans->next = newNode;
-            }
-            else
-                ans->next = nullptr;
-            head = head->next;
-            ans = ans->next;
+            mapping[curr] = new Node(curr->val);
+            curr = curr->next;
         }
-        return ans;
+
+        // Second pass: set next and random pointers
+        curr = head;
+        while (curr != nullptr)
+        {
+            if (curr->next != nullptr)
+                mapping[curr]->next = mapping[curr->next];
+            if (curr->random != nullptr)
+                mapping[curr]->random = mapping[curr->random];
+            curr = curr->next;
+        }
+
+        return mapping[head];
     }
 };
+
+int main()
+{
+    // Test code here
+    return 0;
+}
