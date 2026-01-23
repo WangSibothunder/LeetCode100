@@ -1,7 +1,5 @@
 #include "link.h"
-// #include <iostream>
-// #include <cstdio>
-// using namespace std;
+#include <cstdio>
 /**
  * Definition for singly-linked list.
  * struct ListNode {
@@ -17,51 +15,55 @@ class Solution
 public:
     ListNode *reverseBetween(ListNode *head, int left, int right)
     {
-        if (!head || left == right) return head;
-        
         ListNode *dummy = new ListNode(0);
         dummy->next = head;
-        
-        // 找到反转起始位置的前一个节点
-        ListNode *prev = dummy;
-        for (int i = 0; i < left - 1; ++i) {
-            prev = prev->next;
+        int cnt = 0;
+        if(left==right) return dummy->next;
+        ListNode *reverseStart=new ListNode(0);//反转起点
+        ListNode *reverseEnd=new ListNode(0);//反转终点
+        ListNode *pre = dummy;
+        ListNode *cur = head;
+        while (cur!=nullptr&&cnt<=right)
+        {
+            ListNode* nxt = cur->next;
+            if(cnt==left){
+                pre->next = reverseEnd;//反转起点前一个指向反转终点
+                reverseStart->val = cur->val;
+                pre = reverseStart;
+                cur = nxt;
+                //reverseStart.next最后赋值
+            } else if (cnt<=right&&cnt>left)
+            {
+                cur->next = pre;
+                pre = cur;
+                cur = nxt;
+                if(cnt==right){
+                    reverseEnd->val = pre->val;
+                    reverseEnd->next = pre->next;
+                    reverseStart->next = cur;
+                }
+            } else{
+                pre = cur;
+                cur = nxt;
+            }
+            cnt++;
         }
-        
-        // 开始反转部分的起始节点
-        ListNode *current = prev->next;
-        
-        // 反转指定范围内的节点
-        for (int i = 0; i < right - left; ++i) {
-            ListNode *next_node = current->next;
-            current->next = next_node->next;
-            next_node->next = prev->next;
-            prev->next = next_node;
+        return dummy->next;
         }
-        
-        ListNode *result = dummy->next;
-        delete dummy;  // 清理临时节点
-        return result;
-    }
 };
-
-int main()
-{
-    Solution s;
-    ListNode *head = new ListNode(1);
-    ListNode *node2 = new ListNode(2);
-    ListNode *node3 = new ListNode(3);
-    ListNode *node4 = new ListNode(4);
-    ListNode *node5 = new ListNode(5);
-    head->next = node2;
-    node2->next = node3;
-    node3->next = node4;
-    node4->next = node5;
-    ListNode *res = s.reverseBetween(head, 2, 4);
-    while (res != nullptr)
-    {
-        printf("%d ", res->val);
-        res = res->next;
-    }
-    return 0;
-}
+// int main()
+// {
+//     printf("hello world\n");
+//     fflush(stdout);  // 立即刷新输出缓冲区
+//     printf("before creatList\n");
+//     fflush(stdout);
+//     // Solution sol;
+//     ListNode *head = new ListNode(0);
+//     head = creatList({1, 2, 3, 4, 5});
+//     printf("after creatList\n");
+//     fflush(stdout);
+//     // int left = 2, right = 4;
+//     // ListNode *res = sol.reverseBetween(head, left, right);
+//     // printList(head);
+//     return 0;
+// }
