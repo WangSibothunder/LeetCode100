@@ -1,21 +1,32 @@
-#include<iostream>
-#include<vector>
+#include <iostream>
+#include <vector>
 using namespace std;
 class Solution {
     vector<vector<int>> ans;
     vector<int> path;
-    void dfs(int i,int n,vector<int>& nums){
-        if(i==n){
+    bool inPath[6];
+
+    int n;
+    void dfs(int i, vector<int>& nums) {
+        if (i == n) {
             ans.push_back(path);
             return;
         }
-        for(auto ch:nums){
-            path.push_back(ch);
-            
+        for (int j = 0; j < n; j++) {
+            if (!inPath[j]) {
+                inPath[j] = true;
+                path.push_back(nums[j]);
+                dfs(i + 1, nums);
+                inPath[j] = false;
+                path.pop_back();
+            }
         }
     }
-public:
+
+   public:
     vector<vector<int>> permute(vector<int>& nums) {
-        int n = nums.size();
+        n = nums.size();
+        dfs(0, nums);
+        return ans;
     }
 };
