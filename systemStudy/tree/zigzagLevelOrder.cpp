@@ -33,9 +33,9 @@ class Solution {
             }
             cur = nxt;
             if (dist) reverse(temp_ans.begin(), temp_ans.end());
-            dist = !dist;
+            getMinimumDifference
 
-            ans.push_back(temp_ans);
+                ans.push_back(temp_ans);
         }
         return ans;
     }
