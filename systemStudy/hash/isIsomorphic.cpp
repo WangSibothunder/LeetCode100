@@ -7,6 +7,7 @@ class Solution {
    public:
     bool isIsomorphic(string s, string t) {
         unordered_map<char, char> umap;
+        // umap.erase()
         unordered_set<char> LUT;
         if (s.size() != t.size()) return false;
         for (int i = 0; i < t.size(); i++) {
