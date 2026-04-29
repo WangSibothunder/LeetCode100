@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>算法结课报告：SPFA (队列优化版 Bellman-Ford)</title>
+
+    <!-- 引入 Prism.js 语法高亮 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
+
+    <!-- 引入 Mermaid 用于图表渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            fontFamily: 'Inter, system-ui, sans-serif',
+            flowchart: { htmlLabels: true, curve: 'basis' }
+        });
+    </script>
+
+    <style>
+        /* 现代化排版与 Google 设计美学 */
+        :root {
+            --primary-color: #1a73e8;
+            --text-main: #202124;
+            --text-muted: #5f6368;
+            --bg-body: #ffffff;
+            --bg-card: #f8f9fa;
+            --border-color: #dadce0;
+            --code-bg: #f5f2f0;
+            --radius: 8px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-main);
+            background-color: var(--bg-body);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        /* 注入专属 SVG 全局水印：使用伪元素确保多页打印和 PDF 导出时强制显示 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 9999;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='350' height='350'%3E%3Ctext x='50%25' y='50%25' transform='rotate(-30 175 175)' text-anchor='middle' font-family='system-ui, sans-serif' font-size='22' font-weight='500' fill='rgba(0, 0, 0, 0.06)' letter-spacing='2'%3E王思博202312061%3C/text%3E%3C/svg%3E");
+            background-repeat: repeat;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* 强制导出 PDF 时保留颜色和背景 */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            body {
+                padding: 0;
+            }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--text-main);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-top: 40px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        h2::before {
+            content: "💡 ";
+            margin-right: 8px;
+        }
+
+        p,
+        li {
+            margin-bottom: 16px;
+            font-size: 1.05rem;
+        }
+
+        /* 占位符区域样式 */
+        .placeholder-box {
+            border: 2px dashed #8ab4f8;
+            background-color: #e8f0fe;
+            border-radius: var(--radius);
+            padding: 50px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #1967d2;
+            font-weight: 600;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .placeholder-box:hover {
+            background-color: #d2e3fc;
+            border-color: #1967d2;
+        }
+
+        /* 强调块 */
+        .callout {
+            background-color: #e8f0fe;
+            border-left: 4px solid var(--primary-color);
+            padding: 16px;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            margin: 20px 0;
+        }
+
+        .callout-warning {
+            background-color: #fef7e0;
+            border-left: 4px solid #fbbc04;
+            padding: 16px;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            margin: 20px 0;
+        }
+
+        /* 图表容器与 SVG 放大适配 */
+        .mermaid-container {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 30px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+        }
+
+        .mermaid {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .mermaid svg {
+            max-width: 100% !important;
+            width: 100%;
+            height: auto;
+            min-height: 200px;
+            font-size: 16px;
+        }
+
+        .tag {
+            display: inline-block;
+            background-color: #e8eaed;
+            color: #3c4043;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        pre[class*="language-"] {
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>算法剖析与结课报告：单源最短路径</h1>
+        <p><span class="tag">图论</span><span class="tag">SPFA (Queue-optimized Bellman-Ford)</span><span
+                class="tag">动态规划松弛</span><span class="tag">平均时间 O(E)</span></p>
+
+        <!-- 1. 算法基本信息 -->
+        <h2>1. 算法基本信息 (Algorithm Overview)</h2>
+        <p><strong>算法归属：</strong> 本次我剖析的代码是经典的 <strong>Bellman-Ford 算法的队列优化版本</strong>，在学术界和竞赛圈通常被称为 <strong>SPFA
+                (Shortest Path Faster Algorithm)</strong>。</p>
+        <div class="callout">
+            <strong>我的核心解题思路 (Aha! Moment)：</strong><br>
+            标准的 Bellman-Ford 算法极其“盲目”，它会死板地对图上的所有边进行 <code>V-1</code> 轮松弛
+            (Relaxation)，哪怕某些边的起点根本就还没被探索到。这种大量冗余的无效计算导致了绝对的 <code>O(VE)</code> 复杂度。<br>
+            为了打破这一瓶颈，我在这段代码中引入了 <strong>“波纹扩散”</strong> 的思想：<br>
+            1. 只有当节点 <code>u</code> 的最短距离 <code>minDist[u]</code> <strong>刚刚被更新变小</strong>时，它的邻居 <code>v</code>
+            才有可能获得更短的距离。<br>
+            2. 因此，我使用一个队列 <code>queue</code> 来存储这些“刚刚被更新过”的活跃节点，并利用 <code>inQueue</code> 数组作为快速缓存，防止同一个节点在队列中被重复堆积。<br>
+            这种基于事件驱动的松弛操作，在面对一般随机图时，将时间复杂度从沉重的 <code>O(VE)</code> 直接降维到了平均 <code>O(E)</code> 的惊人速度！
+        </div>
+
+        <!-- 2. 题目与运行结果 -->
+        <h2>2. 题目与运行结果 (Execution Results)</h2>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="94problem.png" alt="SPFA/Bellman-Ford 题目描述"
+                style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        </div>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="94solve.png" alt="SPFA/Bellman-Ford 运行结果"
+                style="max-width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        </div>
+
+        <!-- 3. 控制流图：核心算法逻辑 -->
+        <h2>3. 核心算法控制流 (Control Flow)</h2>
+        <p>SPFA 算法的灵魂在于队列驱动。下面这个控制流图详细展示了从出队、松弛到再次入队的动态反馈循环体系：</p>
+
+        <div class="mermaid-container">
+            <div class="mermaid">
+                graph TD
+                startNode(["开始：初始化 minDist 数组为无穷大 (INT_MAX)<br>起点 1 入队，minDist[1] = 0, inQueue[1] = true"]) -->
+                loopQ{"队列 BMFD 不为空 ?"}
+
+                loopQ -- "是" --> popNode["从队首取出节点 st<br>标记 inQueue[st] = false"]
+                popNode --> loopEdges{"遍历 st 的所有邻接边 edge(st -> to, val)"}
+
+                loopEdges -- "存在未遍历的边" --> checkRelax{"是否可以松弛?<br>minDist[to] > minDist[st] + val"}
+
+                checkRelax -- "否 (不是更优路径)" --> loopEdges
+                checkRelax -- "是 (发现更短路径!)" --> doRelax["更新最短距离：<br>minDist[to] = minDist[st] + val"]
+
+                doRelax --> checkInQueue{"目标节点 to 是否已在队列中?<br>(!inQueue[to])"}
+
+                checkInQueue -- "否 (不在队列中)" --> pushNode["将 to 压入队列 BMFD<br>标记 inQueue[to] = true"] --> loopEdges
+                checkInQueue -- "是 (已在队列中，等待处理)" --> loopEdges
+
+                loopEdges -- "st 的边遍历完毕" --> loopQ
+
+                loopQ -- "否 (队列已空，算法收敛)" --> checkResult{"终点 N 的 minDist 是否为 INT_MAX ?"}
+                checkResult -- "是" --> printUnconn(["输出 'unconnected'"])
+                checkResult -- "否" --> printDist(["输出 minDist[N]"])
+
+                printUnconn --> endNode(["结束"])
+                printDist --> endNode
+
+                style startNode fill:#e8f0fe,stroke:#1a73e8
+                style loopQ fill:#ceeaef,stroke:#00acc1
+                style checkRelax fill:#ffeeba,stroke:#fbbc04
+                style doRelax fill:#d4edda,stroke:#28a745
+                style pushNode fill:#fce8e6,stroke:#d93025
+            </div>
+        </div>
+
+        <!-- 4. 图解算法运行原理 -->
+        <h2>4. 状态推演与松弛过程 (Visual Explanation)</h2>
+        <p>为了直观说明 SPFA 是如何精准传递“更新波纹”的，我们假设有一张简单的有向图：节点 1 指向节点 2 (权重 2) 和节点 3 (权重 5)；节点 2 指向节点 3 (权重 1)。起点为 1。</p>
+
+        <div class="mermaid-container">
+            <div class="mermaid">
+                graph LR
+                subgraph state1 ["Step 1: 初始状态，起点入队"]
+                direction LR
+                n1(("节点 1<br>Dist: 0")) -. "边:2" .-> n2(("节点 2<br>Dist: ∞"))
+                n1 -. "边:5" .-> n3(("节点 3<br>Dist: ∞"))
+                n2 -. "边:1" .-> n3
+
+                Q1["队列内容: [ 1 ]"]
+                style n1 fill:#d4edda,stroke:#28a745,stroke-width:3px
+                end
+            </div>
+        </div>
+
+        <div class="mermaid-container">
+            <div class="mermaid">
+                graph LR
+                subgraph state2 ["Step 2: 弹出节点 1，松弛邻居"]
+                direction LR
+                n1(("节点 1<br>出队")) ==>|松弛 0+2| n2(("节点 2<br>Dist: 2"))
+                n1 ==>|松弛 0+5| n3(("节点 3<br>Dist: 5"))
+                n2 -. "边:1" .-> n3
+
+                Q2["队列内容: [ 2, 3 ]"]
+                style n1 fill:#f8d7da,stroke:#dc3545
+                style n2 fill:#ceeaef,stroke:#00acc1,stroke-width:2px
+                style n3 fill:#ceeaef,stroke:#00acc1,stroke-width:2px
+                end
+            </div>
+        </div>
+
+        <div class="mermaid-container">
+            <div class="mermaid">
+                graph LR
+                subgraph state3 ["Step 3: 弹出节点 2，引发二次松弛"]
+                direction LR
+                n1(("节点 1")) -.- n2(("节点 2<br>出队"))
+                n1 -.- n3(("节点 3<br>Dist: 5"))
+                n2 ==>|松弛 2+1 < 5| n3(("节点 3<br>Dist: 3 (更新!)"))
+
+                    Q3["队列内容: [ 3 ] <br>注意: 3已经在队里，故不重复入队"]
+                    style n2 fill:#f8d7da,stroke:#dc3545
+                    style n3 fill:#fbbc04,stroke:#e65100,stroke-width:3px
+                    end
+            </div>
+        </div>
+        <p>在这个推演中，正是因为 <code>inQueue</code> 数组的存在，当节点 2 发现可以将节点 3 的距离从 5 优化到 3 时，探测到节点 3 已经在队列中等候处理了，便不再将 3
+            重复压入队列。这极大地减少了冗余操作。</p>
+
+        <!-- 5. 算法伪代码 -->
+        <h2>5. 算法逻辑抽象 (Pseudocode)</h2>
+        <p>剥离 C++ 的容器细节，该算法的骨架展现出了极其优雅的事件驱动模型：</p>
+        <pre><code class="language-text">FUNCTION SPFA(graph, start, N):
+    minDist = Array(N+1) 初始化为无穷大
+    inQueue = Array(N+1) 初始化为 false
+    queue = EmptyQueue()
+    
+    // 初始化起点
+    minDist[start] = 0
+    queue.push(start)
+    inQueue[start] = true
+    
+    WHILE NOT queue.isEmpty():
+        u = queue.pop()
+        inQueue[u] = false  // 出队后，标记为不在队列中，允许未来重新入队
+        
+        FOR EACH edge (u -> v with weight w) IN graph[u]:
+            IF minDist[v] > minDist[u] + w:   // 发现更优的捷径 (松弛操作)
+                minDist[v] = minDist[u] + w
+                
+                IF NOT inQueue[v]:            // 避免队列中堆积重复的节点
+                    queue.push(v)
+                    inQueue[v] = true
+                    
+    RETURN minDist</code></pre>
+
+        <!-- 6. 源码与逐行注释 -->
+        <h2>6. 源码实现与逐行剖析 (Implementation & Details)</h2>
+        <p>下面是我的具体 C++ 代码实现。我使用了邻接表 (Adjacency List) 来存储稀疏图，并利用原生的标准库队列驱动整个松弛过程：</p>
+        <pre><code class="language-cpp">#include &lt;climits&gt;
+#include &lt;iostream&gt;
+#include &lt;queue&gt;
+#include &lt;vector&gt;
+using namespace std;
+
+// 1. 定义图的边结构，包含目标节点和权重
+struct Edge {
+    int to, val;
+    Edge(int t, int v) : to(t), val(v) {}
+};
+
+int main() {
+    int N, M;
+    scanf("%d %d", &amp;N, &amp;M);
+    Edge temp(0, 0);
+    
+    // 2. 邻接表建图：graph[i] 存储了从节点 i 出发的所有有向边
+    vector&lt;vector&lt;Edge&gt;&gt; graph(N + 1);
+    int st;
+    for (int i = 0; i &lt; M; i++) {
+        scanf("%d %d %d", &amp;st, &amp;temp.to, &amp;temp.val);
+        graph[st].push_back(temp);
+    }
+    
+    // 3. SPFA 核心数据结构初始化
+    queue&lt;int&gt; BMFD;                       // 活跃节点队列
+    vector&lt;bool&gt; inQueue(N + 1);           // 状态缓存：记录节点是否已在队列中
+    vector&lt;int&gt; minDist(N + 1, INT_MAX);   // 距离表，初始全部为不可达 (INT_MAX)
+    
+    // 4. 起点设定：起点距离为 0，并作为第一缕波纹源头压入队列
+    minDist[1] = 0;
+    BMFD.push(1);
+    inQueue[1] = 1;
+    
+    // 5. 波纹扩散循环
+    while (!BMFD.empty()) {
+        int st = BMFD.front();
+        BMFD.pop();
+        inQueue[st] = 0; // 【关键】：节点出队后必须重置标记，因为它后续可能还会被其他节点发现更短的路径从而再次入队！
+        
+        // 遍历当前活跃节点 st 能够触达的所有邻居
+        for (auto&amp; edge : graph[st]) {
+            // 松弛操作 (Relaxation)：如果通过 st 走到 edge.to 的距离更短
+            if (minDist[edge.to] &gt; minDist[st] + edge.val) {
+                // 如果发现更优解，则更新邻居的最短距离
+                minDist[edge.to] = minDist[st] + edge.val;
+                
+                // 将被波及且不在队列中的邻居拉入队列，让它在下一轮去更新别人
+                if (!inQueue[edge.to]) {
+                    BMFD.push(edge.to);
+                    inQueue[edge.to] = 1;
+                }
+            }
+        }
+    }
+    
+    // 6. 结果判定
+    if (minDist[N] == INT_MAX)
+        cout &lt;&lt; "unconnected" &lt;&lt; endl;  // 如果终点的距离依然是初始化的 INT_MAX，说明根本到达不了
+    else
+        cout &lt;&lt; minDist[N] &lt;&lt; endl;     // 否则输出推演出的最短物理距离
+        
+    return 0;
+}</code></pre>
+
+        <!-- 7. 复杂度深度剖析 -->
+        <h2>7. 复杂度深度剖析 (Complexity Analysis)</h2>
+        <ul>
+            <li><strong>时间复杂度 (Time Complexity): <code
+                        style="color:var(--primary-color);">平均 O(E)，最坏 O(V × E)</code></strong><br>
+                SPFA 的迷人之处与风险所在都集中在时间复杂度上。在一般的随机图中，每个节点平均只会入队几次，整体复杂度逼近 <code>O(E)</code>，甚至跑得比带优先队列优化的 Dijkstra
+                还要快。但如果是经过恶意构造的网格图（使得节点不断地被极其微小的差值反复唤醒入队），其时间复杂度将退化回标准 Bellman-Ford 的底线——也就是
+                <code>O(V × E)</code>。在现代算法竞赛中，这就是著名的“关于 SPFA，它死了”这个梗的由来。
+            </li>
+            <li><strong>空间复杂度 (Space Complexity): <code style="color:var(--primary-color);">O(V + E)</code></strong><br>
+                空间消耗非常清晰：使用邻接表存储图消耗 <code>O(V + E)</code>。状态追踪用的 <code>inQueue</code> 和 <code>minDist</code> 数组各自消耗
+                <code>O(V)</code>。辅助队列 <code>BMFD</code> 在极端情况下最多包含 <code>V</code> 个节点。总计辅助空间复杂度为严谨的
+                <code>O(V + E)</code>。
+            </li>
+        </ul>
+
+        <!-- 8. 边界条件与鲁棒性 -->
+        <h2>8. 边界条件防御与缺陷 (Edge Cases & Pitfalls)</h2>
+        <div class="callout-warning">
+            这段代码虽然能够完美应对普通带权图，但在工业界落地时，必须对其隐患有深刻认知：
+            <ol>
+                <li><strong>未能防御“负权环” (Negative Cycle)</strong>：SPFA 和 Bellman-Ford
+                    最大的卖点就是能处理负权边。但请注意，如果图中存在一个权值总和为负数的环路，这套代码的 <code>while</code>
+                    循环将永远不会停止（节点在环里无限转圈，距离越来越负，不断疯狂入队）。工业级修复方案是：增加一个 <code>count[v]</code> 数组，记录节点 <code>v</code>
+                    的入队次数，如果 <code>count[v] >= V</code>，立刻抛出存在负环的异常并中断算法。</li>
+                <li><strong>不连通的处理</strong>：代码末尾极其严谨地使用了 <code>if (minDist[N] == INT_MAX)</code>
+                    进行判定。这是因为对于无法从起点走到的节点，松弛波纹永远传不到那里，其距离将保持 <code>INT_MAX</code> 不变，这完美符合图论中非连通图的定义。</li>
+            </ol>
+        </div>
+
+        <!-- 9. 算法对比与总结 -->
+        <h2>9. 体系结构视角的工程价值探讨 (HPCA Insights)</h2>
+        <p>作为一名关注底层硬件性能 (AI Infra / 体系结构) 的高级工程师，我在此分享一个进阶视角：为什么大规模工业路由系统（如 OSPF 底层）如今较少使用 SPFA？</p>
+        <ul>
+            <li><strong>内存访问的不可预测性 (Unpredictable Memory Access Pattern)：</strong><br>
+                现代 CPU 极致依赖于分支预测 (Branch Prediction) 和缓存预取 (Cache Prefetcher)。在 SPFA 中，节点以极其动态、混沌的顺序进出
+                <code>queue</code>。当 CPU 试图执行 <code>graph[st]</code> 去拉取邻接链表，并更新 <code>minDist[edge.to]</code>
+                时，它触发的是彻底的<strong>随机散列表访问 (Pointer Chasing / Scatter Access)</strong>。<br>
+                这种毫无规律的内存跨度会导致 L1/L2 Cache 疯狂发生 Cache Miss (缺页未命中)。相比之下，如果图的权值全为正，使用原生的堆优化 Dijkstra
+                算法，虽然理论常数稍大，但配合良好的优先队列数据结构设计，其内存行为更加稳定，且绝不会产生节点被反复“唤醒”的惨剧。
+            </li>
+        </ul>
+        <p>总结而言，这段 SPFA 实现代码是一把锋利的工程快刀，它通过极其轻量级的“队列+缓存器”设计实现了精妙的状态机。只要防范好负权环与恶意卡常数据，它依然是处理稀疏含负权图的顶尖利器。</p>
+
+    </div>
+
+    <!-- 引入 Prism.js 及 C++ 语法组件支持 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+
+</body>
+
+</html>
