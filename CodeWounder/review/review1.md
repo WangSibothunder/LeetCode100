@@ -583,6 +583,162 @@ int main() {
 
 ## dijkstra（有向图的最短联通）
 
+1. 第一步，选源点到哪个节点近且该节点未被访问过
+2. 第二步，该最近节点被标记访问过
+3. 第三步，更新非访问节点到源点的距离（即更新minDist数组）
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <climits>
+using namespace std;
+int main() {
+    int n, m, p1, p2, val;
+    cin >> n >> m;
+
+    vector<vector<int>> grid(n + 1, vector<int>(n + 1, INT_MAX));
+    for(int i = 0; i < m; i++){
+        cin >> p1 >> p2 >> val;
+        grid[p1][p2] = val;
+    }
+
+    int start = 1;
+    int end = n;
+
+    // 存储从源点到每个节点的最短距离
+    std::vector<int> minDist(n + 1, INT_MAX);
+
+    // 记录顶点是否被访问过
+    std::vector<bool> visited(n + 1, false);
+
+    minDist[start] = 0;  // 起始点到自身的距离为0
+
+    for (int i = 1; i <= n; i++) { // 遍历所有节点
+
+        int minVal = INT_MAX;
+        int cur = 1;
+
+        // 1、选距离源点最近且未访问过的节点
+        for (int v = 1; v <= n; ++v) {
+            if (!visited[v] && minDist[v] < minVal) {
+                minVal = minDist[v];
+                cur = v;
+            }
+        }
+
+        visited[cur] = true;  // 2、标记该节点已被访问
+
+        // 3、第三步，更新非访问节点到源点的距离（即更新minDist数组）
+        for (int v = 1; v <= n; v++) {
+            if (!visited[v] && grid[cur][v] != INT_MAX && minDist[cur] + grid[cur][v] < minDist[v]) {
+                minDist[v] = minDist[cur] + grid[cur][v];
+            }
+        }
+
+    }
+
+    if (minDist[end] == INT_MAX) cout << -1 << endl; // 不能到达终点
+    else cout << minDist[end] << endl; // 到达终点最短路径
+
+}
+```
+
+
+
+## Bellman_ford（解决负权重的有向图最短联通）
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <list>
+#include <climits>
+using namespace std;
+
+int main() {
+    int n, m, p1, p2, val;
+    cin >> n >> m;
+
+    vector<vector<int>> grid;
+
+    // 将所有边保存起来
+    for(int i = 0; i < m; i++){
+        cin >> p1 >> p2 >> val;
+        // p1 指向 p2，权值为 val
+        grid.push_back({p1, p2, val});
+
+    }
+    int start = 1;  // 起点
+    int end = n;    // 终点
+
+    vector<int> minDist(n + 1 , INT_MAX);
+    minDist[start] = 0;
+    for (int i = 1; i < n; i++) { // 对所有边 松弛 n-1 次
+        for (vector<int> &side : grid) { // 每一次松弛，都是对所有边进行松弛
+            int from = side[0]; // 边的出发点
+            int to = side[1]; // 边的到达点
+            int price = side[2]; // 边的权值
+            // 松弛操作 
+            // minDist[from] != INT_MAX 防止从未计算过的节点出发
+            if (minDist[from] != INT_MAX && minDist[to] > minDist[from] + price) { 
+                minDist[to] = minDist[from] + price;  
+            }
+        }
+    }
+    if (minDist[end] == INT_MAX) cout << "unconnected" << endl; // 不能到达终点
+    else cout << minDist[end] << endl; // 到达终点最短路径
+
+}
+```
+
+## Floyd（多源最短路径）
+
+用动态规划的思想，grid\[i]\[j]\[k] = m，表示 **节点i 到 节点j 以[1...k] 集合中的一个节点为中间节点的最短距离为m**。
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <list>
+using namespace std;
+
+int main() {
+    int n, m, p1, p2, val;
+    cin >> n >> m;
+
+    vector<vector<vector<int>>> grid(n + 1, vector<vector<int>>(n + 1, vector<int>(n + 1, 10005)));  // 因为边的最大距离是10^4
+    for(int i = 0; i < m; i++){
+        cin >> p1 >> p2 >> val;
+        grid[p1][p2][0] = val;
+        grid[p2][p1][0] = val; // 注意这里是双向图
+
+    }
+    // 开始 floyd
+    for (int k = 1; k <= n; k++) {
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= n; j++) {
+                grid[i][j][k] = min(grid[i][j][k-1], grid[i][k][k-1] + grid[k][j][k-1]);
+            }
+        }
+    }
+    // 输出结果
+    int z, start, end;
+    cin >> z;
+    while (z--) {
+        cin >> start >> end;
+        if (grid[start][end][n] == 10005) cout << -1 << endl;
+        else cout << grid[start][end][n] << endl;
+    }
+}
+
+```
+
+
+
+## A*（有明确方向的BFS）
+
+相对了 普通BFS，A * 算法只从 队列里取出 距离终点最近的节点。
+
+
+
 
 
 
