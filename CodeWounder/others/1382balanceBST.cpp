@@ -16,7 +16,20 @@ class Solution {
     vector<TreeNode*> vec;
     void midTran(TreeNode* root) {
         if (root == nullptr) return;
-        if (root->left) midTran(root->left);
+        midTran(root->left);
+        vec.push_back(root);
+        midTran(root->right);
     }
-    TreeNode* balanceBST(TreeNode* root) {}
+    TreeNode* buildTree(int left, int right) {
+        if (left > right) return nullptr;
+        int mid = (left + right) >> 1;
+        vec[mid]->left = buildTree(left, mid - 1);
+        vec[mid]->right = buildTree(mid + 1, right);
+        return vec[mid];
+    }
+    TreeNode* balanceBST(TreeNode* root) {
+        midTran(root);
+        TreeNode* ans = buildTree(0, vec.size() - 1);
+        return ans;
+    }
 };
