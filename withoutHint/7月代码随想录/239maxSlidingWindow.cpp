@@ -20,7 +20,7 @@ class Solution {
                 window.pop_back();
             window.push_back(i);
         }
-        ans.push_back(nums[window.back()]);
+        ans.push_back(nums[window.front()]);
         return ans;
     }
 };
