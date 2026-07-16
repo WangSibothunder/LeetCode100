@@ -1,45 +1,50 @@
-#include <iostream>
-#include <queue>
-#include <vector>
+#include <bits/stdc++.h>
 using namespace std;
 
-vector<vector<int>> graph;
-vector<int> visited;
-void bfs(int st) {
-    visited[st] = 1;
-    queue<int> myque, temp;
-    myque.push(st);
-    while (!myque.empty()) {
-        int cur = myque.front();
-        visited[cur] = 1;
-        for (int i = 0; i < graph[cur].size(); i++) {
-            if (visited[graph[cur][i]] == 0) temp.push(graph[cur][i]);
-        }
-        if (myque.empty()) {
-            myque = temp;
-            temp = queue<int>();
-        }
-    }
-}
+vector<vector<pair<int, int>>> graph;
+vector<int> minDist, visited;
+
 int main() {
-    int n, m;
-    cin >> n >> m;
-    graph = vector<vector<int>>(n + 1);
-    visited = vector<int>(n + 1);
-    for (int i = 0; i <= m; i++) {
-        int st, ed;
-        cin >> st >> ed;
-        cout << st << " " << ed << "\n";
-        graph[st].push_back(ed);
+    int V, E;
+    cin >> V >> E;
+    graph = vector<vector<pair<int, int>>>(V + 1);
+    minDist = vector<int>(V + 1, INT_MAX);
+    visited = vector<int>(V + 1);
+    for (int i = 1; i <= E; i++) {
+        int st, ed, dis;
+        cin >> st >> ed >> dis;
+        graph[st].push_back({ed, dis});
+        graph[ed].push_back({st, dis});
     }
-    bfs(1);
-    // int flag = 0;
-    for (int i = 1; i <= n; i++) {
-        if (visited[i] == 0) {
-            cout << -1;
-            return 0;
+
+    // prim
+    int cur = 1;
+    minDist[cur] = 0;
+    visited[cur] = 1;
+    int node = 0;
+    while (node < V) {
+        visited[cur] = 1;
+        // printf("cur:%d\n", cur);
+        for (int i = 0; i < graph[cur].size(); i++) {
+            if (!visited[graph[cur][i].first] &&
+                graph[cur][i].second < minDist[graph[cur][i].first]) {
+                minDist[graph[cur][i].first] = graph[cur][i].second;
+            }
         }
+        int nxt = 0;
+        for (int i = 2; i <= V; i++) {
+            //   printf("%d ", minDist[i]);
+            if (visited[i]) {
+                continue;
+            } else if (minDist[i] < minDist[nxt])
+                nxt = i;
+        }
+        // cout << "\n";
+        node++;
+        cur = nxt;
     }
-    cout << 1;
+    int ans = 0;
+    for (int i = 1; i <= V; i++) ans += minDist[i];
+    cout << ans;
     return 0;
 }
